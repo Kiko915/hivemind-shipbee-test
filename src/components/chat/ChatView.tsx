@@ -45,10 +45,9 @@ export default function ChatView({ ticketId, onBack, onExpand }: ChatViewProps) 
         const newText = text.substring(0, start) + emojiData.emoji + text.substring(end)
         setNewMessage(newText)
 
-        // Restore cursor position
+        // Restore cursor position without stealing focus (keeps picker open)
         setTimeout(() => {
             textarea.selectionStart = textarea.selectionEnd = start + emojiData.emoji.length
-            textarea.focus()
         }, 0)
     }
 

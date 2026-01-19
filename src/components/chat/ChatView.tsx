@@ -13,6 +13,7 @@ import { ArrowLeft, Paperclip, Loader2, File, MoreHorizontal, Maximize2, SmileIc
 import EmojiPicker, { type EmojiClickData } from 'emoji-picker-react'
 import { Badge } from '@/components/ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 interface ChatViewProps {
@@ -134,6 +135,25 @@ export default function ChatView({ ticketId, onBack, onExpand }: ChatViewProps) 
         const file = e.target.files?.[0]
         if (!file || !userId) return
 
+        // CONSTANTS
+        const MAX_SIZE = 10 * 1024 * 1024 // 10MB
+        const ALLOWED_TYPES = ['image/', 'video/', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+
+        // Validation
+        if (file.size > MAX_SIZE) {
+            toast.error("File is too large. Maximum size is 10MB.")
+            if (fileInputRef.current) fileInputRef.current.value = ''
+            return
+        }
+
+        // Basic type check (can be stricter)
+        const isValidType = ALLOWED_TYPES.some(type => file.type.startsWith(type) || type === file.type)
+        if (!isValidType) {
+            toast.error("Unsupported file type.")
+            if (fileInputRef.current) fileInputRef.current.value = ''
+            return
+        }
+
         setUploading(true)
         try {
             const fileExt = file.name.split('.').pop()
@@ -161,7 +181,7 @@ export default function ChatView({ ticketId, onBack, onExpand }: ChatViewProps) 
 
         } catch (error) {
             console.error('Error uploading file:', error)
-            alert('Failed to upload file. Make sure the "attachments" bucket exists and is public.')
+            toast.error('Failed to upload file. Please try again.')
         } finally {
             setUploading(false)
             if (fileInputRef.current) fileInputRef.current.value = ''
@@ -279,19 +299,49 @@ export default function ChatView({ ticketId, onBack, onExpand }: ChatViewProps) 
                             >
                                 {msg.content}
                                 {msg.attachments && msg.attachments.length > 0 && (
-                                    <div className="mt-2 pt-2 border-t border-white/20">
-                                        {msg.attachments.map((url, i) => (
-                                            <a
-                                                key={i}
-                                                href={url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center gap-2 text-xs hover:underline decoration-white/50"
-                                            >
-                                                <File className="size-3" />
-                                                Attachment
-                                            </a>
-                                        ))}
+                                    <div className="mt-2 pt-2 border-t border-white/20 space-y-2">
+                                        {msg.attachments.map((url, i) => {
+                                            const fileExt = url.split('.').pop()?.toLowerCase()
+                                            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt || '')
+                                            const isVideo = ['mp4', 'webm', 'ogg'].includes(fileExt || '')
+
+                                            if (isImage) {
+                                                return (
+                                                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
+                                                        <img
+                                                            src={url}
+                                                            alt="Attachment"
+                                                            className="rounded-lg max-w-full h-auto max-h-[200px] object-cover hover:opacity-90 transition-opacity"
+                                                        />
+                                                    </a>
+                                                )
+                                            }
+
+                                            if (isVideo) {
+                                                return (
+                                                    <div key={i} className="rounded-lg overflow-hidden max-w-full">
+                                                        <video
+                                                            src={url}
+                                                            controls
+                                                            className="w-full h-auto max-h-[200px]"
+                                                        />
+                                                    </div>
+                                                )
+                                            }
+
+                                            return (
+                                                <a
+                                                    key={i}
+                                                    href={url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-2 text-xs hover:underline decoration-white/50 bg-black/5 p-2 rounded-md"
+                                                >
+                                                    <File className="size-4 shrink-0" />
+                                                    <span className="truncate max-w-[150px]">{url.split('/').pop()}</span>
+                                                </a>
+                                            )
+                                        })}
                                     </div>
                                 )}
                             </div>
@@ -344,7 +394,7 @@ export default function ChatView({ ticketId, onBack, onExpand }: ChatViewProps) 
                                     ref={fileInputRef}
                                     onChange={handleFileUpload}
                                     className="hidden"
-                                    accept="image/*,.pdf,.doc,.docx"
+                                    accept="image/*,video/*,.pdf,.doc,.docx"
                                 />
                                 <Button
                                     type="button"

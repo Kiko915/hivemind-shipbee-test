@@ -249,7 +249,7 @@ export default function ChatView({ ticketId, onBack, onExpand }: ChatViewProps) 
     return (
         <div className="flex flex-col h-full bg-slate-50 dark:bg-zinc-950">
             {/* Header */}
-            <div className="flex items-center gap-3 p-4 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 shadow-sm z-10 rounded-t-2xl">
+            <div className="flex items-center gap-3 p-4 pr-14 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 shadow-sm z-10 rounded-t-2xl">
                 <Button
                     variant="ghost"
                     size="icon-sm"

@@ -5,7 +5,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2 } from 'lucide-react'
 
-export default function AuthView() {
+interface AuthViewProps {
+    onLogin: () => void
+}
+
+export default function AuthView({ onLogin }: AuthViewProps) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
@@ -33,6 +37,7 @@ export default function AuthView() {
                     password,
                 })
                 if (error) throw error
+                onLogin()
             }
         } catch (err: any) {
             setError(err.message)

@@ -9,7 +9,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ArrowLeft, Paperclip, Loader2, File, MoreHorizontal, Maximize2, SmileIcon } from 'lucide-react'
+import { ArrowLeft, Paperclip, Loader2, File, MoreHorizontal, Maximize2, SmileIcon, Download } from 'lucide-react'
 import EmojiPicker, { type EmojiClickData } from 'emoji-picker-react'
 import { Badge } from '@/components/ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -188,6 +188,56 @@ export default function ChatView({ ticketId, onBack, onExpand }: ChatViewProps) 
         }
     }
 
+    const handleDownloadTranscription = () => {
+        if (!ticket || messages.length === 0) return
+
+        const startDate = new Date(ticket.created_at).toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        })
+        const startTime = new Date(ticket.created_at).toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZoneName: 'short'
+        })
+
+        let content = `Conversation with HiveMind Support\n`
+        content += `Started on ${startDate} at ${startTime}\n\n`
+
+        let currentDate = ''
+
+        messages.forEach((msg) => {
+            const msgDate = new Date(msg.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+
+            if (msgDate !== currentDate) {
+                content += `--- ${msgDate} ---\n\n`
+                currentDate = msgDate
+            }
+
+            const time = new Date(msg.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+            const sender = msg.sender_id === userId ? 'Visitor' : 'Support'
+
+            content += `${time} | ${sender}: ${msg.content}\n\n`
+        })
+
+        const exportDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+        const exportTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })
+
+        content += `---\nExported from HiveMind on ${exportDate} at ${exportTime}`
+
+        const blob = new Blob([content], { type: 'text/plain' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `transcript-${ticketId}.txt`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+    }
+
     if (loading) {
         return (
             <div className="flex h-full items-center justify-center">
@@ -251,6 +301,10 @@ export default function ChatView({ ticketId, onBack, onExpand }: ChatViewProps) 
                         <DropdownMenuItem onClick={onExpand}>
                             <Maximize2 className="mr-2 size-4" />
                             <span>Expand Window</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleDownloadTranscription}>
+                            <Download className="mr-2 size-4" />
+                            <span>Download Transcription</span>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

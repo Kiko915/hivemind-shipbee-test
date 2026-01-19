@@ -3,6 +3,7 @@ import supabase from '@/utils/supabase'
 import type { Ticket } from '@/types/supabase'
 
 import { ArrowRight, MessageCircle, Loader2, Sparkles } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface HomeViewProps {
     onNavigate: (view: 'list' | 'new' | 'chat', ticketId?: string) => void
@@ -21,15 +22,37 @@ export default function HomeView({ onNavigate }: HomeViewProps) {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) return
 
+            // Fetch recent tickets to find unread ones
             const { data } = await supabase
                 .from('tickets')
-                .select('*')
+                .select('*, messages(sender_id, created_at)')
                 .eq('customer_id', user.id)
                 .order('updated_at', { ascending: false })
-                .limit(1)
-                .single()
+                .limit(5)
 
-            setRecentTicket(data)
+            if (!data || data.length === 0) {
+                setRecentTicket(null)
+                return
+            }
+
+            // Find first unread ticket
+            let targetTicket: any = data[0]
+
+            for (const t of data) {
+                const lastMsg = t.messages?.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+                const lastReadStr = localStorage.getItem(`hivemind_last_read_${t.id}`)
+
+                const isUnread = lastMsg
+                    && lastMsg.sender_id !== user.id
+                    && (!lastReadStr || new Date(lastMsg.created_at).getTime() > new Date(lastReadStr).getTime())
+
+                if (isUnread) {
+                    targetTicket = { ...t, isUnread: true }
+                    break
+                }
+            }
+
+            setRecentTicket(targetTicket)
         } catch (error) {
             console.error('Error fetching recent ticket:', error)
         } finally {
@@ -57,8 +80,19 @@ export default function HomeView({ onNavigate }: HomeViewProps) {
                     onClick={() => recentTicket ? onNavigate('chat', recentTicket.id) : onNavigate('new')}
                 >
                     <div className="flex justify-between items-center mb-3">
-                        <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                            {recentTicket ? 'Recent message' : 'Start a conversation'}
+                        <span className={cn(
+                            "text-xs font-medium uppercase tracking-wider",
+                            (recentTicket as any)?.isUnread ? "text-blue-500 font-bold" : "text-zinc-500"
+                        )}>
+                            {(recentTicket as any)?.isUnread ? (
+                                <span className="flex items-center gap-1.5 animate-pulse">
+                                    <span className="relative flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                                    </span>
+                                    New Message
+                                </span>
+                            ) : recentTicket ? 'Recent message' : 'Start a conversation'}
                         </span>
                         {recentTicket && (
                             <span className="text-xs text-zinc-400">

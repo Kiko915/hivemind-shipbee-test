@@ -15,9 +15,10 @@ export default function TicketList({
     onSelectTicket,
     onNewTicket,
 }: TicketListProps) {
-    const [tickets, setTickets] = useState<Ticket[]>([])
+    const [tickets, setTickets] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
     useEffect(() => {
         fetchTickets()
@@ -30,10 +31,11 @@ export default function TicketList({
             } = await supabase.auth.getUser()
 
             if (!user) return
+            setCurrentUserId(user.id)
 
             const { data, error } = await supabase
                 .from('tickets')
-                .select('*')
+                .select('*, messages(sender_id, created_at)')
                 .eq('customer_id', user.id)
                 .order('updated_at', { ascending: false })
 
@@ -46,6 +48,7 @@ export default function TicketList({
         }
     }
 
+    // Loading skeleton...
     if (loading) {
         return (
             <div className="flex flex-col h-full bg-zinc-50 dark:bg-zinc-950">
@@ -99,49 +102,61 @@ export default function TicketList({
                     </div>
                 ) : (
                     <div className="space-y-2 pt-2">
-                        {tickets.map((ticket) => (
-                            <button
-                                key={ticket.id}
-                                onClick={() => onSelectTicket(ticket.id)}
-                                className="w-full text-left p-4 rounded-xl bg-white dark:bg-zinc-900 hover:bg-white/50 dark:hover:bg-zinc-900/50 hover:shadow-md border border-zinc-100 dark:border-zinc-900 dark:hover:border-zinc-800 transition-all duration-200 group relative overflow-hidden"
-                            >
-                                <div className="flex justify-between items-start mb-2">
-                                    <span className={cn(
-                                        "font-medium truncate pr-4 text-sm text-zinc-900 dark:text-zinc-100 transition-colors group-hover:text-primary",
-                                        ticket.status === 'open' ? "font-semibold" : ""
-                                    )}>
-                                        {ticket.subject}
-                                    </span>
-                                    <Badge
-                                        variant="secondary"
-                                        className={cn(
-                                            "uppercase text-[10px] h-5 px-1.5 tracking-wider font-semibold border-none",
-                                            ticket.status === 'open'
-                                                ? "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300"
-                                                : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
-                                        )}
-                                    >
-                                        {ticket.status}
-                                    </Badge>
-                                </div>
+                        {tickets.map((ticket) => {
+                            // Unread Logic
+                            const lastMsg = ticket.messages?.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+                            const lastReadStr = localStorage.getItem(`hivemind_last_read_${ticket.id}`)
+                            const isUnread = lastMsg
+                                && lastMsg.sender_id !== currentUserId
+                                && (!lastReadStr || new Date(lastMsg.created_at).getTime() > new Date(lastReadStr).getTime())
 
-                                <div className="flex items-center justify-between mt-3">
-                                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                                        <Clock className="size-3" />
-                                        <span>
-                                            {new Date(ticket.updated_at).toLocaleDateString(undefined, {
-                                                month: 'short',
-                                                day: 'numeric'
-                                            })}
+                            return (
+                                <button
+                                    key={ticket.id}
+                                    onClick={() => onSelectTicket(ticket.id)}
+                                    className="w-full text-left p-4 rounded-xl bg-white dark:bg-zinc-900 hover:bg-white/50 dark:hover:bg-zinc-900/50 hover:shadow-md border border-zinc-100 dark:border-zinc-900 dark:hover:border-zinc-800 transition-all duration-200 group relative overflow-hidden"
+                                >
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className={cn(
+                                            "font-medium truncate pr-4 text-sm text-zinc-900 dark:text-zinc-100 transition-colors group-hover:text-primary flex items-center gap-2",
+                                            ticket.status === 'open' ? "font-semibold" : ""
+                                        )}>
+                                            {isUnread && (
+                                                <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0 animate-pulse" />
+                                            )}
+                                            {ticket.subject}
                                         </span>
-                                        <span className="text-zinc-300 dark:text-zinc-700">•</span>
-                                        <span className="font-mono opacity-80">#{ticket.id.slice(0, 5)}</span>
+                                        <Badge
+                                            variant="secondary"
+                                            className={cn(
+                                                "uppercase text-[10px] h-5 px-1.5 tracking-wider font-semibold border-none",
+                                                ticket.status === 'open'
+                                                    ? "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300"
+                                                    : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+                                            )}
+                                        >
+                                            {ticket.status}
+                                        </Badge>
                                     </div>
 
-                                    <ChevronRight className="size-3 text-zinc-300 dark:text-zinc-700 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-                                </div>
-                            </button>
-                        ))}
+                                    <div className="flex items-center justify-between mt-3">
+                                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                                            <Clock className="size-3" />
+                                            <span>
+                                                {new Date(ticket.updated_at).toLocaleDateString(undefined, {
+                                                    month: 'short',
+                                                    day: 'numeric'
+                                                })}
+                                            </span>
+                                            <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                                            <span className="font-mono opacity-80">#{ticket.id.slice(0, 5)}</span>
+                                        </div>
+
+                                        <ChevronRight className="size-3 text-zinc-300 dark:text-zinc-700 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                                    </div>
+                                </button>
+                            )
+                        })}
                     </div>
                 )}
             </div>

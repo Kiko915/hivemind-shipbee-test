@@ -5,8 +5,9 @@ import ChatWidget from '@/components/chat/ChatWidget'
 import AdminLogin from '@/pages/admin/AdminLogin'
 import AdminGuard from '@/components/admin/AdminGuard'
 import AdminLayout from '@/layouts/AdminLayout'
-import AdminDashboard from '@/pages/admin/AdminDashboard'
-import AdminTickets from '@/pages/admin/AdminTickets'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminTickets from './pages/admin/AdminTickets'
+import AdminTicketDetail from './pages/admin/AdminTicketDetail'
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
             <Route index element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="tickets" element={<AdminTickets />} />
+            <Route path="tickets/:id" element={<AdminTicketDetail />} />
             {/* Future routes: users, settings */}
             <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
           </Route>

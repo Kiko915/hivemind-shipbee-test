@@ -5,13 +5,10 @@ import {
     CheckCircle2,
     Clock,
     ArrowUpRight,
-    ArrowDownRight,
-    Search,
-    Filter
+    ArrowDownRight
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import supabase from '@/utils/supabase'
 import {

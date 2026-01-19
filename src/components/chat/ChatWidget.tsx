@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { MessageCircle, X, Home, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -16,6 +17,10 @@ export default function ChatWidget() {
     const [isOpen, setIsOpen] = useState(false)
     const [view, setView] = useState<ViewState>('home')
     const [activeTicketId, setActiveTicketId] = useState<string | null>(null)
+    const location = useLocation()
+
+    // Hide widget on admin routes
+    if (location.pathname.startsWith('/admin')) return null
 
     const [isExpanded, setIsExpanded] = useState(false)
 

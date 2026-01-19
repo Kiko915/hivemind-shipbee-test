@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft, Loader2, Sparkles, Send } from 'lucide-react'
+import { ArrowLeft, Loader2, Send } from 'lucide-react'
 
 interface NewTicketFormProps {
     onCancel: () => void

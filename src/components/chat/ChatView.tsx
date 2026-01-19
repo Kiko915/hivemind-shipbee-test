@@ -2,14 +2,17 @@ import { useEffect, useRef, useState } from 'react'
 import supabase from '@/utils/supabase'
 import type { Message, Ticket } from '@/types/supabase'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ArrowLeft, Send, Paperclip, Loader2, File, MoreHorizontal, Maximize2 } from 'lucide-react'
+import { ArrowLeft, Paperclip, Loader2, File, MoreHorizontal, Maximize2, SmileIcon } from 'lucide-react'
+import EmojiPicker, { type EmojiClickData } from 'emoji-picker-react'
+import { Badge } from '@/components/ui/badge'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
 interface ChatViewProps {
@@ -27,7 +30,27 @@ export default function ChatView({ ticketId, onBack, onExpand }: ChatViewProps) 
     const [userId, setUserId] = useState<string | null>(null)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const textareaRef = useRef<HTMLTextAreaElement>(null)
     const [uploading, setUploading] = useState(false)
+
+    const handleEmojiClick = (emojiData: EmojiClickData) => {
+        const textarea = textareaRef.current
+        if (!textarea) {
+            setNewMessage((prev) => prev + emojiData.emoji)
+            return
+        }
+        const start = textarea.selectionStart
+        const end = textarea.selectionEnd
+        const text = newMessage
+        const newText = text.substring(0, start) + emojiData.emoji + text.substring(end)
+        setNewMessage(newText)
+
+        // Restore cursor position
+        setTimeout(() => {
+            textarea.selectionStart = textarea.selectionEnd = start + emojiData.emoji.length
+            textarea.focus()
+        }, 0)
+    }
 
     useEffect(() => {
         supabase.auth.getUser().then(({ data }) => {
@@ -157,22 +180,51 @@ export default function ChatView({ ticketId, onBack, onExpand }: ChatViewProps) 
     return (
         <div className="flex flex-col h-full bg-slate-50 dark:bg-zinc-950">
             {/* Header */}
-            <div className="flex items-center gap-2 p-3 bg-white dark:bg-zinc-900 border-b shadow-sm z-10">
-                <Button variant="ghost" size="icon-sm" onClick={onBack} className="shrink-0">
+            <div className="flex items-center gap-3 p-4 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 shadow-sm z-10 rounded-t-2xl">
+                <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={onBack}
+                    className="shrink-0"
+                >
                     <ArrowLeft className="size-4" />
                 </Button>
-                <div className="flex-1 min-w-0">
-                    <h2 className="font-semibold text-sm truncate">{ticket?.subject || 'Chat'}</h2>
-                    <div className="flex items-center gap-1.5 status-badge">
-                        <span className={`size-2 rounded-full ${ticket?.status === 'open' ? 'bg-green-500' : 'bg-gray-400'}`} />
-                        <span className="text-xs text-muted-foreground capitalize">{ticket?.status}</span>
+
+                <div className="flex-1 min-w-0 flex items-center gap-3">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-1.5 rounded-lg shrink-0">
+                        <img src="/hivemind_blue.png" alt="HiveMind" className="size-6 object-contain" />
+                    </div>
+                    <div className="flex flex-col">
+                        <h2 className="font-semibold text-sm truncate flex items-center gap-2">
+                            HiveMind Support
+                        </h2>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[11px] text-muted-foreground truncate max-w-[120px]">
+                                {ticket?.subject || 'New Conversation'}
+                            </span>
+                            {ticket?.status && (
+                                <Badge
+                                    variant={ticket.status === 'open' ? 'default' : 'secondary'}
+                                    className={cn(
+                                        "h-4 px-1.5 text-[10px] capitalize border-none",
+                                        ticket.status === 'open' ? "bg-green-100 text-green-700 hover:bg-green-100/80 dark:bg-green-500/20 dark:text-green-400" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-100/80 dark:bg-zinc-800 dark:text-zinc-400"
+                                    )}
+                                >
+                                    {ticket.status}
+                                </Badge>
+                            )}
+                        </div>
                     </div>
                 </div>
 
                 {/* 3-Dot Menu */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon-sm" className="shrink-0">
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className="shrink-0"
+                        >
                             <MoreHorizontal className="size-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -187,22 +239,43 @@ export default function ChatView({ ticketId, onBack, onExpand }: ChatViewProps) 
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.map((msg) => {
+                {messages.map((msg, index) => {
                     const isMe = msg.sender_id === userId
+                    const prevMsg = messages[index - 1]
+                    const nextMsg = messages[index + 1]
+
+                    const isSameSenderAsPrev = prevMsg?.sender_id === msg.sender_id
+                    const isSameSenderAsNext = nextMsg?.sender_id === msg.sender_id
+
+                    const isWithinTimeThresholdPrev = prevMsg && (new Date(msg.created_at).getTime() - new Date(prevMsg.created_at).getTime() < 2 * 60 * 1000)
+                    const isWithinTimeThresholdNext = nextMsg && (new Date(nextMsg.created_at).getTime() - new Date(msg.created_at).getTime() < 2 * 60 * 1000)
+
+                    const isGroupStart = !isSameSenderAsPrev || !isWithinTimeThresholdPrev
+                    const isGroupEnd = !isSameSenderAsNext || !isWithinTimeThresholdNext
+
                     return (
                         <div
                             key={msg.id}
                             className={cn(
-                                "flex max-w-[85%] flex-col gap-1",
-                                isMe ? "ml-auto items-end" : "mr-auto items-start"
+                                "flex max-w-[85%] flex-col gap-1 transition-all",
+                                isMe ? "ml-auto items-end" : "mr-auto items-start",
+                                !isGroupEnd ? "mb-1" : "mb-4"
                             )}
                         >
                             <div
                                 className={cn(
-                                    "rounded-2xl px-4 py-2.5 text-sm shadow-sm",
+                                    "px-4 py-2.5 text-sm shadow-sm break-all whitespace-pre-wrap",
                                     isMe
-                                        ? "bg-primary text-primary-foreground rounded-br-none"
-                                        : "bg-white dark:bg-zinc-800 border text-foreground rounded-bl-none"
+                                        ? "bg-primary text-primary-foreground"
+                                        : "bg-white dark:bg-zinc-800 border text-foreground",
+                                    // Radius logic for grouping
+                                    "rounded-2xl",
+                                    isMe && !isGroupStart && "rounded-tr-sm",
+                                    isMe && !isGroupEnd && "rounded-br-sm",
+                                    isMe && isGroupEnd && "rounded-br-none", // Tail for last message
+                                    !isMe && !isGroupStart && "rounded-tl-sm",
+                                    !isMe && !isGroupEnd && "rounded-bl-sm",
+                                    !isMe && isGroupEnd && "rounded-bl-none" // Tail for last message
                                 )}
                             >
                                 {msg.content}
@@ -223,9 +296,15 @@ export default function ChatView({ ticketId, onBack, onExpand }: ChatViewProps) 
                                     </div>
                                 )}
                             </div>
-                            <span className="text-[10px] text-muted-foreground px-1">
-                                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
+                            {isGroupEnd && (
+                                <span className={cn(
+                                    "text-[10px] text-muted-foreground px-1 opacity-70",
+                                    !isMe && "ml-1",
+                                    isMe && "mr-1"
+                                )}>
+                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                            )}
                         </div>
                     )
                 })}
@@ -238,42 +317,86 @@ export default function ChatView({ ticketId, onBack, onExpand }: ChatViewProps) 
                     This ticket has been closed.
                 </div>
             ) : (
-                <form onSubmit={handleSendMessage} className="p-3 bg-white dark:bg-zinc-900 border-t flex items-end gap-2">
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileUpload}
-                        className="hidden"
-                        accept="image/*,.pdf,.doc,.docx"
-                    />
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        disabled={uploading}
-                        onClick={() => fileInputRef.current?.click()}
-                        className="shrink-0 text-muted-foreground hover:text-primary"
+                <div className="p-4 bg-white dark:bg-zinc-900 border-t space-y-3">
+                    <form
+                        onSubmit={handleSendMessage}
+                        className="flex flex-col gap-2 bg-slate-100 dark:bg-zinc-800 p-3 rounded-2xl relative transition-all focus-within:ring-1 focus-within:ring-primary/20 focus-within:bg-slate-50 dark:focus-within:bg-zinc-800/80"
                     >
-                        {uploading ? <Loader2 className="size-5 animate-spin" /> : <Paperclip className="size-5" />}
-                    </Button>
-                    <div className="flex-1 relative">
-                        <Input
+                        <Textarea
+                            ref={textareaRef}
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
-                            placeholder="Type a message..."
-                            className="pr-10 py-2.5 h-10 bg-slate-50 dark:bg-zinc-950 border-input/60 focus-visible:ring-1"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault()
+                                    handleSendMessage()
+                                }
+                            }}
+                            placeholder="Message..."
+                            className="border-0 shadow-none bg-transparent px-0 py-1 min-h-auto focus-visible:ring-0 resize-none placeholder:text-muted-foreground/70 flex-1 max-h-32 overflow-y-auto"
                             disabled={sending}
+                            rows={1}
                         />
+
+                        <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center gap-1.5 text-muted-foreground">
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleFileUpload}
+                                    className="hidden"
+                                    accept="image/*,.pdf,.doc,.docx"
+                                />
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon-xs"
+                                    disabled={uploading}
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="h-6 w-6 hover:text-primary transition-colors"
+                                >
+                                    {uploading ? <Loader2 className="size-4 animate-spin" /> : <Paperclip className="size-4" />}
+                                </Button>
+                                {/* Emoji Picker */}
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button type="button" variant="ghost" size="icon-xs" className="h-6 w-6 hover:text-primary transition-colors">
+                                            <SmileIcon className="size-4" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent side="top" align="start" className="w-full p-0 border-none shadow-none bg-transparent">
+                                        <EmojiPicker
+                                            onEmojiClick={handleEmojiClick}
+                                            lazyLoadEmojis={true}
+                                            searchDisabled={false}
+                                            skinTonesDisabled
+                                            previewConfig={{ showPreview: false }}
+                                            height={300}
+                                            width="100%"
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                                {/* <Mic className="size-4 hover:text-primary cursor-pointer transition-colors" /> */}
+                            </div>
+
+                            <Button
+                                type="submit"
+                                size="icon-xs"
+                                disabled={!newMessage.trim() || sending}
+                                className={cn(
+                                    "h-7 w-7 rounded-full transition-all",
+                                    newMessage.trim() ? "bg-primary text-primary-foreground shadow-md hover:bg-primary/90" : "bg-muted text-muted-foreground hover:bg-muted"
+                                )}
+                            >
+                                {sending ? <Loader2 className="size-3.5 animate-spin" /> : <ArrowLeft className="size-3.5 rotate-90" />} {/* ArrowUp icon roughly */}
+                            </Button>
+                        </div>
+                    </form>
+
+                    <div className="flex items-center justify-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity">
+                        <span className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground">Powered by HiveMind</span>
                     </div>
-                    <Button
-                        type="submit"
-                        size="icon"
-                        disabled={!newMessage.trim() || sending}
-                        className={cn("shrink-0 shadow-sm", sending && "opacity-70")}
-                    >
-                        {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-                    </Button>
-                </form>
+                </div>
             )}
         </div>
     )

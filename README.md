@@ -39,3 +39,37 @@ HiveMind is a full-stack support system designed to demonstrate "Systems Thinkin
 ## 🔐 Admin Credentials (Demo)
 - **Email:** `admin@hivemind.com`
 - **Password:** `Admin12345!`
+
+
+## 🧪 How to Test (The "Golden Path")
+
+To experience the full "Systems Thinking" architecture (Realtime, AI Triage, and Security), please follow this 2-minute testing flow:
+
+### 1. Setup
+- Open the **Live Demo** in your main browser (this will be the **Admin** view).
+- Open the **Live Demo** again in an **Incognito Window** (this will be the **Customer** view).
+
+### 2. The Customer Experience (Incognito Window)
+1. On the Landing Page, click the **Chat Widget** (bottom right).
+2. Login with any email (or use `customer@demo.com` / `123456`).
+3. **The AI Trigger:** Send a message with "urgency" keywords to test the Auto-Triage system:
+   > *"URGENT: My package arrived completely damaged and wet. I need a refund immediately!"*
+4. Notice the message sends instantly.
+
+### 3. The Admin Experience (Main Window)
+1. Go to `/admin/login` and login:
+   - **Email:** `admin@hivemind.com`
+   - **Password:** `Admin12345!`
+2. **Observe:**
+   - The **Dashboard Stats** (top cards) load instantly via the custom RPC.
+   - The new ticket appears at the All Tickets page.
+   - 🚨 **AI Verification:** Notice the tags **"Urgent"** and **"Negative Sentiment"** were automatically applied by the Edge Function.
+3. Click the ticket to open the chat.
+4. **AI Smart Reply:** Click the **Sparkles (✨)** button below the input box.
+   - Watch the AI model generate a polite apology based on the context.
+5. Click **Send**.
+6. Update **Status** to see live updates and ticket resolvation.
+
+### 4. The Realtime Sync
+- Switch back to your **Incognito Window**.
+- Confirm the Admin's reply appeared instantly without refreshing the page.

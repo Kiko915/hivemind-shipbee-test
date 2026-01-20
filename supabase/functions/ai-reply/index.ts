@@ -55,23 +55,23 @@ Deno.serve(async (req: Request) => {
 
         // 3. Call Groq
         const prompt = `
-You are an expert customer support agent for "HiveMind".
-Your goal is to draft a polite, professional, and helpful reply to the customer based on the conversation history.
+        You are an expert customer support agent for "HiveMind".
+        Your goal is to draft a polite, professional, and helpful reply to the customer based on the conversation history.
 
-Context:
-Subject: ${ticket.subject}
+        Context:
+        Subject: ${ticket.subject}
 
-Conversation History:
-${history}
+        Conversation History:
+        ${history}
 
-Draft a response that:
-1. Acknowledges the customer's last message.
-2. Provides a helpful solution or asks clarifying questions if needed.
-3. Maintains a friendly and professional tone.
-4. Is concise (under 150 words).
+        Draft a response that:
+        1. Acknowledges the customer's last message.
+        2. Provides a helpful solution or asks clarifying questions if needed.
+        3. Maintains a friendly and professional tone.
+        4. Is concise (under 150 words).
 
-Return ONLY the response text. Do not include "Subject:" or any other metadata.
-`
+        Return ONLY the response text. Do not include "Subject:" or any other metadata.
+        `
 
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',

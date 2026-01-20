@@ -44,50 +44,30 @@ export default function AdminDashboard() {
         try {
             setLoading(true)
 
-            // Parallel data fetching for speed
-            const [ticketsResponse, usersResponse] = await Promise.all([
-                supabase.from('tickets').select('*'),
-                supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'customer')
-            ])
+            const { data, error } = await supabase.rpc('get_dashboard_stats')
 
-            if (ticketsResponse.error) throw ticketsResponse.error
-            if (usersResponse.error) throw usersResponse.error
+            if (error) throw error
 
-            const tickets = ticketsResponse.data || []
-            const userCount = usersResponse.count || 0
+            const stats = data as any
 
             // Calculations
-            const total = tickets.length
-            const resolved = tickets.filter(t => t.status === 'resolved' || t.status === 'closed').length
+            const total = stats.total_tickets
+            const resolved = stats.status_counts.resolved + stats.status_counts.closed
             const rate = total > 0 ? Math.round((resolved / total) * 100) : 0
-
-            // Status Data
-            const statusCounts = {
-                open: tickets.filter(t => t.status === 'open').length,
-                resolved: tickets.filter(t => t.status === 'resolved').length,
-                closed: tickets.filter(t => t.status === 'closed').length
-            }
-
-            // Priority Data
-            const priorityCounts = {
-                high: tickets.filter(t => t.priority === 'high').length,
-                medium: tickets.filter(t => t.priority === 'medium').length,
-                low: tickets.filter(t => t.priority === 'low').length
-            }
 
             setStats({
                 totalTickets: total,
-                activeUsers: userCount,
+                activeUsers: stats.active_users,
                 resolvedRate: rate,
                 ticketsByStatus: [
-                    { name: 'Open', value: statusCounts.open },
-                    { name: 'Resolved', value: statusCounts.resolved },
-                    { name: 'Closed', value: statusCounts.closed }
+                    { name: 'Open', value: stats.status_counts.open },
+                    { name: 'Resolved', value: stats.status_counts.resolved },
+                    { name: 'Closed', value: stats.status_counts.closed }
                 ],
                 ticketsByPriority: [
-                    { priority: 'High', count: priorityCounts.high },
-                    { priority: 'Medium', count: priorityCounts.medium },
-                    { priority: 'Low', count: priorityCounts.low }
+                    { priority: 'High', count: stats.priority_counts.high },
+                    { priority: 'Medium', count: stats.priority_counts.medium },
+                    { priority: 'Low', count: stats.priority_counts.low }
                 ]
             })
 

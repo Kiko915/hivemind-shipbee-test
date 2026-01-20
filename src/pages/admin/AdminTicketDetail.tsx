@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import supabase from '@/utils/supabase'
 import type { Ticket, Profile, Message } from '@/types/supabase'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+
 import { Textarea } from '@/components/ui/textarea'
 import {
     Select,
@@ -11,7 +13,6 @@ import {
     SelectTrigger,
     SelectValue
 } from '@/components/ui/select'
-
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { toast } from 'sonner'
@@ -331,10 +332,42 @@ export default function AdminTicketDetail() {
 
     const getPriorityIcon = (priority: string) => {
         switch (priority) {
+            case 'urgent': return <span className="size-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
             case 'high': return <span className="size-2 rounded-full bg-red-500" />
             case 'medium': return <span className="size-2 rounded-full bg-orange-400" />
             case 'low': return <span className="size-2 rounded-full bg-blue-400" />
             default: return null
+        }
+    }
+
+    const getSentimentBadge = (sentiment: string | null) => {
+        if (!sentiment) return null
+
+        switch (sentiment.toLowerCase()) {
+            case 'positive':
+                return (
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800">
+                        Positive
+                    </Badge>
+                )
+            case 'negative':
+                return (
+                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800">
+                        Negative
+                    </Badge>
+                )
+            case 'neutral':
+                return (
+                    <Badge variant="outline" className="bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700">
+                        Neutral
+                    </Badge>
+                )
+            default:
+                return (
+                    <Badge variant="secondary" className="capitalize">
+                        {sentiment}
+                    </Badge>
+                )
         }
     }
 
@@ -609,12 +642,22 @@ export default function AdminTicketDetail() {
                                     </div>
                                 </SelectTrigger>
                                 <SelectContent>
+                                    <SelectItem value="urgent">Urgent</SelectItem>
                                     <SelectItem value="high">High</SelectItem>
                                     <SelectItem value="medium">Medium</SelectItem>
                                     <SelectItem value="low">Low</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
+
+                        {ticket.sentiment && (
+                            <div className="space-y-1">
+                                <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">Sentiment (AI)</label>
+                                <div className="flex items-center h-10">
+                                    {getSentimentBadge(ticket.sentiment)}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="h-px bg-zinc-200 dark:bg-zinc-800" />

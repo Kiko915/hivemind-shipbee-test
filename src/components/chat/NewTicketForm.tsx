@@ -63,6 +63,21 @@ export default function NewTicketForm({
 
             if (messageError) throw messageError
 
+            // Trigger AI Triage (fire and forget)
+            // Trigger AI Triage (fire and forget)
+            const { data: { session } } = await supabase.auth.getSession()
+
+            supabase.functions.invoke('ai-triage', {
+                body: {
+                    ticket_id: ticket.id,
+                    subject,
+                    content: message
+                },
+                headers: {
+                    Authorization: session?.access_token ? `Bearer ${session.access_token}` : ''
+                }
+            }).catch(err => console.error('Failed to trigger AI triage:', err))
+
             onSuccess(ticket.id)
         } catch (err: any) {
             setError(err.message)

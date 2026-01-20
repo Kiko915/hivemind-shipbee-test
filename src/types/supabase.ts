@@ -10,8 +10,8 @@ export interface Ticket {
     customer_id: string
     subject: string | null
     status: 'open' | 'resolved' | 'closed'
-    priority: 'low' | 'medium' | 'high'
-    sentiment: string | null
+    priority: 'low' | 'medium' | 'high' | 'urgent'
+    sentiment: 'positive' | 'neutral' | 'negative' | string | null
     created_at: string
     updated_at: string
 }

@@ -25,6 +25,7 @@ import {
     MoreHorizontal,
     ArrowUpRight
 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { formatDistanceToNow } from 'date-fns'
 import { cn } from '@/lib/utils'
 import {
@@ -107,6 +108,7 @@ export default function AdminTickets() {
 
     const getPriorityIcon = (priority: string) => {
         switch (priority) {
+            case 'urgent': return <span className="size-2 rounded-full bg-purple-600 mr-2" />
             case 'high': return <span className="size-2 rounded-full bg-red-500 mr-2" />
             case 'medium': return <span className="size-2 rounded-full bg-orange-400 mr-2" />
             case 'low': return <span className="size-2 rounded-full bg-blue-400 mr-2" />
@@ -218,10 +220,11 @@ export default function AdminTickets() {
                     <TableHeader>
                         <TableRow className="bg-zinc-50/80 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50/80">
                             <TableHead className="w-[100px] font-medium text-xs uppercase tracking-wider text-zinc-500">ID</TableHead>
-                            <TableHead className="w-[400px] font-medium text-xs uppercase tracking-wider text-zinc-500">Subject</TableHead>
+                            <TableHead className="w-[300px] font-medium text-xs uppercase tracking-wider text-zinc-500">Subject</TableHead>
                             <TableHead className="font-medium text-xs uppercase tracking-wider text-zinc-500">Customer</TableHead>
                             <TableHead className="font-medium text-xs uppercase tracking-wider text-zinc-500">Status</TableHead>
                             <TableHead className="font-medium text-xs uppercase tracking-wider text-zinc-500">Priority</TableHead>
+                            <TableHead className="font-medium text-xs uppercase tracking-wider text-zinc-500">Sentiment</TableHead>
                             <TableHead className="font-medium text-xs uppercase tracking-wider text-zinc-500">Updated</TableHead>
                             <TableHead className="text-right font-medium text-xs uppercase tracking-wider text-zinc-500">Actions</TableHead>
                         </TableRow>
@@ -240,13 +243,14 @@ export default function AdminTickets() {
                                     </TableCell>
                                     <TableCell><Skeleton className="h-5 w-16" /></TableCell>
                                     <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                                    <TableCell><Skeleton className="h-5 w-16" /></TableCell>
                                     <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                                     <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                                 </TableRow>
                             ))
                         ) : filteredTickets.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="h-64 text-center">
+                                <TableCell colSpan={8} className="h-64 text-center">
                                     <div className="flex flex-col items-center justify-center text-zinc-500">
                                         <div className="bg-zinc-100 dark:bg-zinc-800 p-3 rounded-full mb-3">
                                             <Search className="size-6 text-zinc-400" />
@@ -341,12 +345,25 @@ export default function AdminTickets() {
                                                         </div>
                                                     </SelectTrigger>
                                                     <SelectContent>
+                                                        <SelectItem value="urgent">Urgent</SelectItem>
                                                         <SelectItem value="high">High</SelectItem>
                                                         <SelectItem value="medium">Medium</SelectItem>
                                                         <SelectItem value="low">Low</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            {ticket.sentiment && (
+                                                <Badge variant="outline" className={cn(
+                                                    "text-[10px] h-5 px-2 capitalize border-zinc-200 dark:border-zinc-800 font-medium",
+                                                    ticket.sentiment === 'negative' && "text-red-600 bg-red-50 border-red-100 dark:bg-red-900/10 dark:text-red-400 dark:border-red-900/30",
+                                                    ticket.sentiment === 'positive' && "text-green-600 bg-green-50 border-green-100 dark:bg-green-900/10 dark:text-green-400 dark:border-green-900/30",
+                                                    ticket.sentiment === 'neutral' && "text-zinc-600 bg-zinc-50 border-zinc-100 dark:bg-zinc-900/10 dark:text-zinc-400 dark:border-zinc-800"
+                                                )}>
+                                                    {ticket.sentiment}
+                                                </Badge>
+                                            )}
                                         </TableCell>
                                         <TableCell className="text-xs text-zinc-500">
                                             {formatDistanceToNow(new Date(ticket.updated_at), { addSuffix: true })}

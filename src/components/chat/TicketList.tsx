@@ -128,7 +128,7 @@ export default function TicketList({
                                         <Badge
                                             variant="secondary"
                                             className={cn(
-                                                "uppercase text-[10px] h-5 px-1.5 tracking-wider font-semibold border-none",
+                                                "uppercase text-[10px] h-5 px-1.5 tracking-wider font-semibold border-none shrink-0",
                                                 ticket.status === 'open'
                                                     ? "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300"
                                                     : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"

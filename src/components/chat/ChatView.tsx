@@ -9,7 +9,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ArrowLeft, Paperclip, Loader2, File, MoreHorizontal, Maximize2, SmileIcon, Download } from 'lucide-react'
+import { ArrowLeft, Paperclip, Loader2, File, MoreHorizontal, Maximize2, SmileIcon, Download, CheckCircle2, Lock } from 'lucide-react'
 import EmojiPicker, { type EmojiClickData } from 'emoji-picker-react'
 import { Badge } from '@/components/ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -459,9 +459,24 @@ export default function ChatView({ ticketId, onBack, onExpand }: ChatViewProps) 
 
             {/* Input */}
             {
-                ticket?.status === 'closed' ? (
-                    <div className="p-4 bg-gray-50 text-center text-sm text-gray-500 border-t">
-                        This ticket has been closed.
+                (ticket?.status === 'closed' || ticket?.status === 'resolved') ? (
+                    <div className="p-6 bg-slate-50 dark:bg-zinc-900/50 border-t border-zinc-100 dark:border-zinc-800 flex flex-col items-center justify-center gap-2 text-center animate-in fade-in duration-500">
+                        <div className={cn(
+                            "p-3 rounded-full mb-1",
+                            ticket.status === 'resolved'
+                                ? "bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400"
+                                : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400"
+                        )}>
+                            {ticket.status === 'resolved' ? <CheckCircle2 className="size-6" /> : <Lock className="size-6" />}
+                        </div>
+                        <h3 className="font-medium text-slate-900 dark:text-slate-100">
+                            {ticket.status === 'resolved' ? 'Ticket Resolved' : 'Ticket Closed'}
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[250px]">
+                            {ticket.status === 'resolved'
+                                ? 'This conversation has been marked as resolved. If you need further assistance, please create a new ticket.'
+                                : 'This ticket has been closed by the support team.'}
+                        </p>
                     </div>
                 ) : (
                     <div className="p-4 bg-white dark:bg-zinc-900 border-t space-y-3">
@@ -514,7 +529,7 @@ export default function ChatView({ ticketId, onBack, onExpand }: ChatViewProps) 
                                                 <SmileIcon className="size-4" />
                                             </Button>
                                         </PopoverTrigger>
-                                        <PopoverContent side="top" align="start" className="w-full p-0 border-none shadow-none bg-transparent">
+                                        <PopoverContent side="top" align="start" className="w-full p-0 border-none shadow-none bg-transparent z-[99999]">
                                             <EmojiPicker
                                                 onEmojiClick={handleEmojiClick}
                                                 lazyLoadEmojis={true}

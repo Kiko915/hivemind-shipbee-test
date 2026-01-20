@@ -6,7 +6,8 @@
 HiveMind is a full-stack support system designed to demonstrate "Systems Thinking" in serverless architecture. It combines a real-time embeddable widget for customers with an AI-empowered workspace for agents.
 
 ## 🔗 Live Demo
-[https://hivemind-shipbee-test.vercel.app/]
+- Landing Page w/ Chat Widget: https://hivemind-shipbee-test.vercel.app/
+- Admin Login Page: https://hivemind-shipbee-test.vercel.app/admin/login
 
 ## ⚡ Key Features
 

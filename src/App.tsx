@@ -10,6 +10,7 @@ import AdminTickets from './pages/admin/AdminTickets'
 import AdminTicketDetail from './pages/admin/AdminTicketDetail'
 import AdminCustomers from './pages/admin/AdminCustomers'
 import AdminCustomerDetail from '@/pages/admin/AdminCustomerDetail'
+import AdminAbout from '@/pages/admin/AdminAbout'
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
             <Route path="tickets/:id" element={<AdminTicketDetail />} />
             <Route path="customers" element={<AdminCustomers />} />
             <Route path="customers/:id" element={<AdminCustomerDetail />} />
+            <Route path="about" element={<AdminAbout />} />
             {/* Future routes: settings */}
             <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
           </Route>

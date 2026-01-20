@@ -5,7 +5,7 @@ import {
     LayoutDashboard,
     Ticket,
     Users,
-    Settings,
+    Info,
     LogOut,
     Menu,
     X,
@@ -49,7 +49,7 @@ export default function AdminLayout() {
         { icon: LayoutDashboard, label: 'Overview', path: '/admin/dashboard' },
         { icon: Ticket, label: 'All Tickets', path: '/admin/tickets' },
         { icon: Users, label: 'Customers', path: '/admin/customers' },
-        { icon: Settings, label: 'Settings', path: '/admin/settings' },
+        { icon: Info, label: 'About', path: '/admin/about' },
     ]
 
     const avatarUrl = `https://api.dicebear.com/9.x/thumbs/svg?seed=${userEmail}`

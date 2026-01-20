@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import supabase from '@/utils/supabase'
-import type { Ticket } from '@/types/supabase'
 import { Button } from '@/components/ui/button'
 import { Plus, MessageCircle, AlertCircle, Clock, ChevronRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'

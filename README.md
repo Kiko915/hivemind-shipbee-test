@@ -1,3 +1,5 @@
+<img src="./public/hivemind_blue.png" alt="HiveMind Logo" width="200">
+
 # HiveMind 🐝
 > Intelligent Customer Support Widget & Admin Dashboard for ShipBee.
 

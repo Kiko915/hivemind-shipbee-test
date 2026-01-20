@@ -22,7 +22,8 @@ import {
     Paperclip,
     Smile,
     Loader2,
-    File as FileIcon
+    File as FileIcon,
+    Sparkles
 } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
 import { cn } from '@/lib/utils'
@@ -56,6 +57,7 @@ export default function AdminTicketDetail() {
     const [loading, setLoading] = useState(true)
     const [sending, setSending] = useState(false)
     const [uploading, setUploading] = useState(false)
+    const [generatingReply, setGeneratingReply] = useState(false)
 
     const [replyText, setReplyText] = useState('')
     const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
@@ -321,6 +323,27 @@ export default function AdminTicketDetail() {
         }
     }
 
+    const handleGenerateReply = async () => {
+        if (!ticket) return
+        setGeneratingReply(true)
+        try {
+            const { data, error } = await supabase.functions.invoke('ai-reply', {
+                body: { ticket_id: ticket.id }
+            })
+
+            if (error) throw error
+            if (data.error) throw new Error(data.error)
+
+            setReplyText(data.reply)
+            toast.success('Draft generated!')
+        } catch (error) {
+            console.error('Error generating reply:', error)
+            toast.error('Failed to generate draft')
+        } finally {
+            setGeneratingReply(false)
+        }
+    }
+
     const getStatusStyles = (status: string) => {
         switch (status) {
             case 'open': return 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800'
@@ -579,6 +602,20 @@ export default function AdminTicketDetail() {
                                         />
                                     </PopoverContent>
                                 </Popover>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
+                                    onClick={handleGenerateReply}
+                                    disabled={generatingReply}
+                                    title="Smart Draft (AI)"
+                                >
+                                    {generatingReply ? (
+                                        <Loader2 className="size-4 animate-spin" />
+                                    ) : (
+                                        <Sparkles className="size-4" />
+                                    )}
+                                </Button>
                             </div>
                             <Button
                                 onClick={handleSendMessage}
@@ -593,6 +630,7 @@ export default function AdminTicketDetail() {
                     </div>
                 </div>
             </div>
+
 
             {/* Right: Sidebar Info */}
             <div className="w-80 border-l border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0 overflow-y-auto">
@@ -686,7 +724,7 @@ export default function AdminTicketDetail() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     )
 }
 

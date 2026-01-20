@@ -515,7 +515,7 @@ export default function ChatView({ ticketId, onBack, onExpand }: ChatViewProps) 
                                     <Button
                                         type="button"
                                         variant="ghost"
-                                        size="icon-xs"
+                                        size="sm"
                                         disabled={uploading}
                                         onClick={() => fileInputRef.current?.click()}
                                         className="h-6 w-6 hover:text-primary transition-colors"
@@ -525,7 +525,7 @@ export default function ChatView({ ticketId, onBack, onExpand }: ChatViewProps) 
                                     {/* Emoji Picker */}
                                     <Popover>
                                         <PopoverTrigger asChild>
-                                            <Button type="button" variant="ghost" size="icon-xs" className="h-6 w-6 hover:text-primary transition-colors">
+                                            <Button type="button" variant="ghost" size="sm" className="h-6 w-6 hover:text-primary transition-colors">
                                                 <SmileIcon className="size-4" />
                                             </Button>
                                         </PopoverTrigger>
@@ -546,7 +546,7 @@ export default function ChatView({ ticketId, onBack, onExpand }: ChatViewProps) 
 
                                 <Button
                                     type="submit"
-                                    size="icon-xs"
+                                    size="sm"
                                     disabled={!newMessage.trim() || sending}
                                     className={cn(
                                         "h-7 w-7 rounded-full transition-all",

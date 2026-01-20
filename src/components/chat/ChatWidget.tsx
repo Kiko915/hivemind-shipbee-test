@@ -144,7 +144,7 @@ export default function ChatWidget() {
                             <div className="absolute top-4 right-4 z-[100] flex items-center gap-2">
                                 <Button
                                     variant="ghost"
-                                    size="icon-xs"
+                                    size="sm"
                                     onClick={toggleOpen}
                                     className="h-8 w-8 rounded-full bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 backdrop-blur-sm"
                                 >

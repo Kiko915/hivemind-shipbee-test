@@ -100,9 +100,27 @@ export default function ChatView({ ticketId, onBack, onExpand }: ChatViewProps) 
             )
             .subscribe()
 
+        // Sub for ticket status changes
+        const ticketStatusChannel = supabase
+            .channel(`ticket-updates:${ticketId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'tickets',
+                    filter: `id=eq.${ticketId}`,
+                },
+                (payload) => {
+                    setTicket(payload.new as Ticket)
+                }
+            )
+            .subscribe()
+
         return () => {
             if (channelRef.current) supabase.removeChannel(channelRef.current)
             supabase.removeChannel(dbChannel)
+            supabase.removeChannel(ticketStatusChannel)
         }
     }, [ticketId])
 

@@ -37,6 +37,16 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 type TicketWithUser = Ticket & {
     profiles: Profile
@@ -53,6 +63,7 @@ export default function AdminTickets() {
     const [priorityFilter, setPriorityFilter] = useState<string>('all')
     const [searchParams] = useSearchParams()
     const [searchQuery, setSearchQuery] = useState(searchParams.get('userId') || '')
+    const [deleteTicketId, setDeleteTicketId] = useState<string | null>(null)
 
     const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
@@ -151,6 +162,27 @@ export default function AdminTickets() {
         } catch (error) {
             console.error('Error updating priority:', error)
             toast.error('Failed to update priority')
+        }
+    }
+
+    const handleDeleteTicket = async () => {
+        if (!deleteTicketId) return
+
+        try {
+            const { error } = await supabase
+                .from('tickets')
+                .delete()
+                .eq('id', deleteTicketId)
+
+            if (error) throw error
+
+            setTickets(tickets.filter(t => t.id !== deleteTicketId))
+            toast.success('Ticket deleted successfully')
+        } catch (error) {
+            console.error('Error deleting ticket:', error)
+            toast.error('Failed to delete ticket')
+        } finally {
+            setDeleteTicketId(null)
         }
     }
 
@@ -378,9 +410,16 @@ export default function AdminTickets() {
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                     <DropdownMenuItem>View Details</DropdownMenuItem>
-                                                    <DropdownMenuItem>Mark as Resolved</DropdownMenuItem>
                                                     <DropdownMenuSeparator />
-                                                    <DropdownMenuItem className="text-red-600">Delete Ticket</DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/10"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setDeleteTicketId(ticket.id)
+                                                        }}
+                                                    >
+                                                        Delete Ticket
+                                                    </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
@@ -406,6 +445,27 @@ export default function AdminTickets() {
                     </Button>
                 </div>
             </div>
-        </div>
+
+
+            <AlertDialog open={!!deleteTicketId} onOpenChange={(open) => !open && setDeleteTicketId(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the ticket and remove it from our servers.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteTicket}
+                            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </div >
     )
 }

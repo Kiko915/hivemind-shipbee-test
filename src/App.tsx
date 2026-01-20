@@ -8,6 +8,8 @@ import AdminLayout from '@/layouts/AdminLayout'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminTickets from './pages/admin/AdminTickets'
 import AdminTicketDetail from './pages/admin/AdminTicketDetail'
+import AdminCustomers from './pages/admin/AdminCustomers'
+import AdminCustomerDetail from '@/pages/admin/AdminCustomerDetail'
 
 function App() {
   return (
@@ -23,7 +25,9 @@ function App() {
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="tickets" element={<AdminTickets />} />
             <Route path="tickets/:id" element={<AdminTicketDetail />} />
-            {/* Future routes: users, settings */}
+            <Route path="customers" element={<AdminCustomers />} />
+            <Route path="customers/:id" element={<AdminCustomerDetail />} />
+            {/* Future routes: settings */}
             <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
           </Route>
         </Route>

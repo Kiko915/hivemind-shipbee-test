@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import supabase from '@/utils/supabase'
 import type { Ticket, Profile } from '@/types/supabase'
 import {
@@ -9,7 +10,6 @@ import {
     TableHeader,
     TableRow
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import {
@@ -39,6 +39,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 type TicketWithUser = Ticket & {
     profiles: Profile
+    messages: {
+        sender_id: string
+        created_at: string
+    }[]
 }
 
 export default function AdminTickets() {
@@ -46,7 +50,8 @@ export default function AdminTickets() {
     const [loading, setLoading] = useState(true)
     const [statusFilter, setStatusFilter] = useState<string>('all')
     const [priorityFilter, setPriorityFilter] = useState<string>('all')
-    const [searchQuery, setSearchQuery] = useState('')
+    const [searchParams] = useSearchParams()
+    const [searchQuery, setSearchQuery] = useState(searchParams.get('userId') || '')
 
     const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
@@ -85,7 +90,8 @@ export default function AdminTickets() {
         const matchesSearch =
             ticket.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             ticket.profiles?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            ticket.id.includes(searchQuery)
+            ticket.id.includes(searchQuery) ||
+            ticket.customer_id.includes(searchQuery)
 
         return matchesStatus && matchesPriority && matchesSearch
     })

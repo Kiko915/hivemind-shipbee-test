@@ -9,7 +9,6 @@ import {
     LogOut,
     Menu,
     X,
-    Bell,
     ChevronDown
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -49,7 +48,7 @@ export default function AdminLayout() {
     const navItems = [
         { icon: LayoutDashboard, label: 'Overview', path: '/admin/dashboard' },
         { icon: Ticket, label: 'All Tickets', path: '/admin/tickets' },
-        { icon: Users, label: 'Customers', path: '/admin/users' },
+        { icon: Users, label: 'Customers', path: '/admin/customers' },
         { icon: Settings, label: 'Settings', path: '/admin/settings' },
     ]
 

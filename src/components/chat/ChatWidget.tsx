@@ -17,11 +17,8 @@ export default function ChatWidget() {
     const [isOpen, setIsOpen] = useState(false)
     const [view, setView] = useState<ViewState>('home')
     const [activeTicketId, setActiveTicketId] = useState<string | null>(null)
+    const [isAdmin, setIsAdmin] = useState(false)
     const location = useLocation()
-
-    // Hide widget on admin routes
-    if (location.pathname.startsWith('/admin')) return null
-
     const [isExpanded, setIsExpanded] = useState(false)
 
     // Load persisted state on mount
@@ -66,25 +63,48 @@ export default function ChatWidget() {
         localStorage.setItem('hivemind_chat_expanded', String(isExpanded))
     }, [isExpanded])
 
-    // Check auth state
+    // Check auth state and admin role
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        const checkAdminStatus = async (userId: string) => {
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', userId)
+                    .single()
+
+                if (profile?.role === 'admin') {
+                    setIsAdmin(true)
+                } else {
+                    setIsAdmin(false)
+                }
+            } catch (error) {
+                console.error('Error checking admin status:', error)
+            }
+        }
+
+        const checkUser = async () => {
+            const { data: { session } } = await supabase.auth.getSession()
+
             if (!session) {
-                // If not logged in, force auth view
                 setView('auth')
             } else {
-                // If logged in, we verify we aren't stuck in auth
                 setView(current => current === 'auth' ? 'home' : current)
+                checkAdminStatus(session.user.id)
             }
-        })
+        }
+
+        checkUser()
 
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange((_event, session) => {
             if (!session) {
                 setView('auth')
+                setIsAdmin(false) // Reset admin status on logout
             } else {
                 setView(current => current === 'auth' ? 'home' : current)
+                checkAdminStatus(session.user.id)
             }
         })
 
@@ -100,6 +120,9 @@ export default function ChatWidget() {
         }
         setView(newView)
     }
+
+    // Hide widget on admin routes or if user is admin
+    if (location.pathname.startsWith('/admin') || isAdmin) return null
 
     return (
         <div className="fixed bottom-4 right-4 z-9999 flex flex-col items-end gap-4 font-sans antialiased">

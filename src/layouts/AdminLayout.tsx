@@ -101,21 +101,13 @@ export default function AdminLayout() {
                     ))}
                 </nav>
 
-                {/* User Profile Footer */}
+                {/* Footer */}
                 <div className="p-4 border-t border-zinc-800 bg-zinc-900/50">
-                    <div className="flex items-center gap-3 px-2 py-2 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
-                        <Avatar className="h-9 w-9 border border-zinc-700">
-                            <AvatarImage src={avatarUrl} alt="Admin" />
-                            <AvatarFallback>AD</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-zinc-200 truncate">
-                                {userEmail || 'Admin User'}
-                            </p>
-                            <p className="text-xs text-zinc-300 font-medium truncate flex items-center gap-1">
-                                <span className="size-1.5 rounded-full bg-green-500 inline-block animate-pulse" />
-                                Admin
-                            </p>
+                    <div className="flex flex-col gap-1">
+                        <p className="text-xs font-medium text-zinc-500">© 2026 HiveMind Systems</p>
+                        <div className="flex items-center gap-2">
+                            <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            <p className="text-[10px] text-zinc-600 font-mono">System Operational</p>
                         </div>
                     </div>
                 </div>

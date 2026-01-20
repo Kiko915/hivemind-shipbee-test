@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button'
 import {
     Search,
     MoreHorizontal,
-    ArrowUpRight
+
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { formatDistanceToNow } from 'date-fns'
@@ -200,10 +200,7 @@ export default function AdminTickets() {
                     <Button variant="outline" size="sm" onClick={() => fetchTickets()} className="h-9">
                         Refresh
                     </Button>
-                    <Button size="sm" className="h-9 gap-2">
-                        <ArrowUpRight className="size-4" />
-                        Export
-                    </Button>
+
                 </div>
             </div>
 

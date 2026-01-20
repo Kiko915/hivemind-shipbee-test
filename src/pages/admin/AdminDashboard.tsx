@@ -5,7 +5,9 @@ import {
     CheckCircle2,
     Clock,
     ArrowUpRight,
-    ArrowDownRight
+    ArrowDownRight,
+    Download,
+    Loader2
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -32,9 +34,11 @@ export default function AdminDashboard() {
         totalTickets: 0,
         activeUsers: 0,
         resolvedRate: 0,
+
         ticketsByStatus: [] as { name: string; value: number }[],
         ticketsByPriority: [] as { priority: string; count: number }[]
     })
+    const [downloading, setDownloading] = useState(false)
 
     useEffect(() => {
         fetchDashboardData()
@@ -79,6 +83,55 @@ export default function AdminDashboard() {
         }
     }
 
+    const handleDownloadReport = async () => {
+        try {
+            setDownloading(true)
+            const { data: tickets, error } = await supabase
+                .from('tickets')
+                .select(`
+                    *,
+                    profiles:customer_id (
+                        email
+                    )
+                `)
+                .order('created_at', { ascending: false })
+
+            if (error) throw error
+
+            // Convert to CSV
+            const headers = ['ID', 'Subject', 'Status', 'Priority', 'Customer Email', 'Created At']
+            const csvRows = [
+                headers.join(','),
+                ...tickets.map((t: any) => [
+                    t.id,
+                    `"${t.subject?.replace(/"/g, '""')}"`, // Escape quotes
+                    t.status,
+                    t.priority,
+                    t.profiles?.email || 'Unknown',
+                    new Date(t.created_at).toLocaleString()
+                ].join(','))
+            ]
+
+            const csvData = csvRows.join('\n')
+            const blob = new Blob([csvData], { type: 'text/csv' })
+            const url = window.URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `support-report-${new Date().toISOString().split('T')[0]}.csv`
+            document.body.appendChild(a)
+            a.click()
+            window.URL.revokeObjectURL(url)
+            document.body.removeChild(a)
+
+            toast.success('Report downloaded')
+        } catch (error) {
+            console.error('Error downloading report:', error)
+            toast.error('Failed to download report')
+        } finally {
+            setDownloading(false)
+        }
+    }
+
     const COLORS = {
         open: '#3b82f6', // blue-500
         resolved: '#22c55e', // green-500
@@ -106,7 +159,17 @@ export default function AdminDashboard() {
                     >
                         Refresh
                     </Button>
-                    <Button size="sm" className="h-9">
+                    <Button
+                        size="sm"
+                        className="h-9"
+                        onClick={handleDownloadReport}
+                        disabled={downloading}
+                    >
+                        {downloading ? (
+                            <Loader2 className="mr-2 size-4 animate-spin" />
+                        ) : (
+                            <Download className="mr-2 size-4" />
+                        )}
                         Download Report
                     </Button>
                 </div>
